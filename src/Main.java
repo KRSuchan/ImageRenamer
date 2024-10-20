@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -53,12 +54,16 @@ public class Main {
         System.out.println("디렉토리가 생성되었습니다.");
 
         for (int i = 0; i < names.size(); i++) {
-            System.out.println(i);
-            String s = names.get(i);
-            String[] ss = s.split("\\.");
-            Path path = Paths.get(imgDirPath + s);
-            Path newPath = Paths.get(savePath + "\\" + newDirName + newFileName + " (" + (i + 1) + ")." + ss[ss.length - 1]);
-            Files.move(path, newPath);
+            try {
+                System.out.println(i);
+                String s = names.get(i);
+                String[] ss = s.split("\\.");
+                Path path = Paths.get(imgDirPath + s);
+                Path newPath = Paths.get(savePath + "\\" + newDirName + newFileName + " (" + (i + 1) + ")." + ss[ss.length - 1]);
+                Files.move(path, newPath);
+            } catch (NoSuchFileException e) {
+                System.err.println("html UUID 태그 리스트가 없거나 중복된 경우, 해당 파일은 스킵됩니다.");
+            }
         }
         System.out.println("\n완료\n");
     }
