@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -7,16 +8,20 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 public class ImageRenamerApp {
     public static final String DEFAULT_PATH = "C:\\Users\\lsc48\\OneDrive\\바탕 화면";
 
     public static void run() throws IOException {
         // 사용자 입력 시작
-        ArrayList<File> list = getFilesAt(DEFAULT_PATH + "\\");
-        for (File htmlFile : list) {
+        ArrayList<File> fileList = getFilesAt(DEFAULT_PATH + "\\");
+
+        for (File htmlFile : fileList) {
             String htmlFilePath = htmlFile.getPath();
             String imgDirPath = htmlFilePath.replace(".html", "_files");
+            System.out.println(imgDirPath);
             if (!imgDirPath.endsWith("\\")) {
                 imgDirPath += "\\";
             }
@@ -30,8 +35,6 @@ public class ImageRenamerApp {
                 fileName = imgDirPath.substring(startIdx, endIdx);
             }
             System.out.println(fileName);
-
-//        System.out.println("\n수정된 이미지 파일들이 저장될 새 디렉토리 이름 입력\n");
             String newDirName = fileName;
             if (!newDirName.endsWith("\\")) {
                 newDirName += "\\";
@@ -81,10 +84,33 @@ public class ImageRenamerApp {
                     System.err.println("html UUID 태그 리스트가 없거나 중복된 경우, 해당 파일은 스킵됩니다.");
                 }
             }
-
+            System.out.println("html 파일 삭제");
+            Files.delete(htmlFile.toPath());
+            System.out.println("dir 삭제");
+            deleteDirectory(Paths.get(imgDirPath));
         }
-        System.out.println("\n완료\n");
+        StringBuilder message = new StringBuilder();
+        message.append("Image Rename Complete!").append("\n");
+        message.append("파일 목록 : \n");
+        for (File file : fileList) {
+            message.append("\t").append(file.getName()).append("\n");
+        }
+        JOptionPane.showMessageDialog(null, message, "Complete", JOptionPane.INFORMATION_MESSAGE);
+    }
 
+    public static void deleteDirectory(Path dirPath) throws IOException {
+        // 파일 트리를 하위부터 위로 정렬해서 삭제
+        try (Stream<Path> paths = Files.walk(dirPath)) {
+            paths
+                    .sorted(Comparator.reverseOrder()) // 하위부터 먼저
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to delete " + path, e);
+                        }
+                    });
+        }
     }
 
     public static ArrayList<File> getFilesAt(String directoryPath) {
